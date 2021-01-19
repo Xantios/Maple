@@ -9,6 +9,15 @@ Maple providers the task runner you always wanted but never dared to ask for.
 ## NOTICE
 Maple is current in active development (say alpha state) production use is **NOT** yet recommend
 
+## Installation 
+**Notice!** 
+
+Currently there is no public stable release: please add `"minimum-stability": "dev"` to your composer.json
+
+```bash 
+composer require xantios/maple
+```
+
 ## Configuration
 
 The configuration file is a plain PHP array
