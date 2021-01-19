@@ -1,0 +1,18 @@
+#!/usr/bin/env php
+<?php
+
+use Maple\RunCommand;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\SingleCommandApplication;
+
+require __DIR__.'/vendor/autoload.php';
+
+
+use Symfony\Component\Console\Application;
+
+$run = new RunCommand();
+
+$application = new Application();
+$application->add($run);
+$application->setDefaultCommand($run->getName(),true);
+$application->run();

@@ -1,0 +1,26 @@
+{
+    "name": "xantios/maple",
+    "description": "A TaskRunner with the sweet taste of Maple",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Xantios Krugor",
+            "email": "git@xantios.nl"
+        }
+    ],
+    "require": {
+        "react/child-process": "^0.6.1",
+        "symfony/console": "^5.2",
+        "react/http": "^1.2.0",
+        "illuminate/collections": "^8.22"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-master",
+        "symfony/var-dumper": "^5.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Maple\\": "src/"
+        }
+    }
+}
