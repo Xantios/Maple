@@ -1,6 +1,6 @@
 <?php
 
-namespace Maple;
+namespace Xantios\Maple;
 
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Output\OutputInterface;

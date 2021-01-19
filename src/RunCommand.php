@@ -1,6 +1,6 @@
 <?php
 
-namespace Maple;
+namespace Xantios\Maple;
 
 use React\EventLoop\Factory;
 use Symfony\Component\Console\Command\Command;

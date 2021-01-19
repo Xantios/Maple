@@ -1,6 +1,6 @@
 <?php
 
-namespace Maple;
+namespace Xantios\Maple;
 
 use Illuminate\Support\Collection;
 use React\EventLoop\LoopInterface;

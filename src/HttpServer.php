@@ -1,6 +1,6 @@
 <?php
 
-namespace Maple;
+namespace Xantios\Maple;
 
 use Psr\Http\Message\ServerRequestInterface;
 use React\ChildProcess\Process;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Maple;
+namespace Xantios\Maple;
 
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;

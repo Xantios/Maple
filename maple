@@ -1,12 +1,12 @@
 #!/usr/bin/env php
 <?php
 
-use Maple\RunCommand;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\SingleCommandApplication;
+use Xantios\Maple\RunCommand;
 
-require __DIR__.'/vendor/autoload.php';
-
+// if Dev run
+if(file_exists(__DIR__.'/vendor/autoload.php')) {
+    require __DIR__ . '/vendor/autoload.php';
+}
 
 use Symfony\Component\Console\Application;
 
