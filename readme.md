@@ -2,25 +2,33 @@
     <img src="https://raw.githubusercontent.com/Xantios/Maple/master/src/ui/logo.svg" alt="Maple Logo">
 </p>
 
-## Welcome to Maple!
+# Welcome to Maple!
 
 Maple providers the task runner you always wanted but never dared to ask for. 
 
-## NOTICE
-Maple is current in active development (say alpha state) production use is **NOT** yet recommend
+### Notice for production usage
+Maple is current in active development (say beta state) production use can be done if you're one of the brave (if you are please let me know how you like it in production!) 
 
-## Installation 
-**Notice!** 
+## Installation per project  
 
-Currently there is no public stable release: please add `"minimum-stability": "dev"` to your composer.json
+Just your regular dependency should do the trick!
 
-```bash 
-composer require xantios/maple
-```
+`composer require xantios/maple`
+
+After running composer add a `maple-config.php` to the work directory of your project and run:
+
+`vendor/bin/maple`
+
+## Global installation
+
+If you use Maple a lot, maybe install it globally.
+`composer global require xantios/maple` should do the trick! 
+
+when you run the maple command make sure there is a config in your current directory.
 
 ## Configuration
 
-The configuration file is a plain PHP array
+The configuration file is a plain PHP array, it is pretty self-explanatory
 
 ```php
 <?php
@@ -67,15 +75,9 @@ return [
 ];
 ```
 
-## Running
-
-```bash
-./maple
-```
-
 ## Webinterface
 
-There is a dashboard available at `http://localhost:8100`
+There is a dashboard available at `http://localhost:8100` that looks something like this:
 
 <img src="src/ui/screenshot.png" alt="Screenshot" style="float:left; margin-right: 10px; "/>
 
@@ -89,7 +91,7 @@ Thank you emails, donations, photos of how your life changed by a piece of softw
 
 ## Security Vulnerabilities
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Xantios Krugor <git@xantios.nl> All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within Maple, please send an e-mail to Xantios Krugor <git@xantios.nl> All security vulnerabilities will be promptly addressed.
 
 ## License
 
