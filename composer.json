@@ -18,7 +18,8 @@
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
-        "symfony/var-dumper": "^5.2"
+        "symfony/var-dumper": "^5.2",
+        "vimeo/psalm": "^4.4"
     },
     "autoload": {
         "psr-4": {

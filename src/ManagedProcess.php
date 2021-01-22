@@ -9,7 +9,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ManagedProcess {
 
     private OutputInterface $output;
-    private Process $process;
     private LoopInterface $loop;
 
     private string $prefix;
@@ -26,7 +25,6 @@ class ManagedProcess {
 
     // Run after this task if defined
     public string $afterName = '';
-    public ManagedProcess $afterInstance;
 
     public function __construct(array $config,OutputInterface $output,LoopInterface $loop) {
 
@@ -58,8 +56,8 @@ class ManagedProcess {
     {
         $this->status = ProcessStateManager::CREATED;
 
-        $this->process = new Process($this->command);
-        $this->process->start($this->loop);
+        $process = new Process($this->command);
+        $process->start($this->loop);
 
         // First attempt should be obvious
         if($this->currentRetry > 0) {
@@ -69,15 +67,15 @@ class ManagedProcess {
         $this->status = ProcessStateManager::RUNNING;
         $this->started_at = (string)((new \DateTime())->getTimestamp()*1000); // JS uses ms instead of secs
 
-        $this->process->stdout->on('data',function($chunk) {
+        $process->stdout->on('data',function($chunk) {
             $this->printStdMsg($chunk);
         });
 
-        $this->process->stderr->on('data',function($chunk) {
+        $process->stderr->on('data',function($chunk) {
             $this->printStdMsg($chunk);
         });
 
-        $this->process->on('exit',function($code,$termSig) {
+        $process->on('exit',function($code) {
 
             if($code !== 0) {
                 $this->status = ProcessStateManager::CRASHED;
@@ -89,11 +87,11 @@ class ManagedProcess {
             if($this->afterName) {
 
                 $psm = ProcessStateManager::getInstance();
-                $this->afterInstance = $psm->get($this->safeName($this->afterName));
+                $afterInstance = $psm->get($this->safeName($this->afterName));
 
-                $this->output->writeln($this->prefix.' :: Exited Next => '.$this->afterInstance->name);
+                $this->output->writeln($this->prefix.' :: Exited Next => '.$afterInstance->name);
 
-                $this->afterInstance->run();
+                $afterInstance->run();
 
                 return;
             }

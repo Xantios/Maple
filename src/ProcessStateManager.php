@@ -27,7 +27,15 @@ class ProcessStateManager {
         $this->loop = $loop;
     }
 
-    public static function getInstance($output = null,$loop = null): ProcessStateManager
+    /**
+     * Singleton pattern in PHP, returns the same instance over and over again
+     *
+     * @param OutputInterface|null $output
+     * @param LoopInterface|null $loop
+     *
+     * @return ProcessStateManager
+     */
+    public static function getInstance(?OutputInterface $output = null,?LoopInterface $loop = null): ProcessStateManager
     {
         if(!self::$instance) {
             self::$instance = new ProcessStateManager($output,$loop);
