@@ -54,7 +54,7 @@ class HttpServer {
 
     public function run(): void
     {
-        $socket = new \React\Socket\Server($this->port,$this->loop);
+        $socket = new \React\Socket\Server($this->host.":".$this->port,$this->loop);
         $this->output->writeln('<info>Listening on '.$this->host.":".$this->port.'</info>');
         $this->server->listen($socket);
     }
