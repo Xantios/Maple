@@ -34,8 +34,11 @@ The configuration file is a plain PHP array, it is pretty self-explanatory
 <?php
 
 return [
-    // Port for web interface to listen on
-    'port' => 8100,
+    // Host to listen on (defaults to 127.0.0.1)
+    # 'host' => '0.0.0.0',
+
+    // Port for web interface to listen on (defaults to 8100)
+    # 'port' => 8100,
     
     // Verbose logging
     'verbose' => true,

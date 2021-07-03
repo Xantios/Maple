@@ -12,6 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class HttpServer {
 
     private int $port;
+    private string $host;
 
     private LoopInterface $loop;
     private Server $server;
@@ -19,7 +20,9 @@ class HttpServer {
 
     public function __construct(array $config,LoopInterface $loop,OutputInterface $output) {
 
-        $this->port = $config['port'];
+        $this->port = (isset($config['port'])) ? $config['port'] : '8100';
+        $this->host = (isset($config['host'])) ? $config['host'] : '127.0.0.1';
+
         $this->loop = $loop;
         $this->output = $output;
 
@@ -52,7 +55,7 @@ class HttpServer {
     public function run(): void
     {
         $socket = new \React\Socket\Server($this->port,$this->loop);
-        $this->output->writeln('<info>Listening on port '.$this->port.'</info>');
+        $this->output->writeln('<info>Listening on '.$this->host.":".$this->port.'</info>');
         $this->server->listen($socket);
     }
 
