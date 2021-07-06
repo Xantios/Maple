@@ -117,6 +117,10 @@
             return "<div class=\"py-1 px-2 md:py-2 md:px-4 shadow-md no-underline rounded-full bg-red-600 text-white font-sans font-semibold text-sm md:text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Crashed</div>";
         }
 
+        if (label === "Created") {
+            return "<div class=\"py-1 px-2 md:py-2 md:px-4 shadow-md no-underline rounded-full bg-blue-400 text-white font-sans font-semibold text-sm md:text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Created</div>";
+        }
+
         return label;
     }
 
