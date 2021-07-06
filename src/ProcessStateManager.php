@@ -61,8 +61,13 @@ class ProcessStateManager {
         return $this->items->all();
     }
 
-    public function get(string $name) {
+    public function get(string $name) :ManagedProcess {
         return $this->items->where('name',$name)->first();
+    }
+
+    public function log(string $name) :array {
+        $item = $this->items->where('name',$name)->first();
+        return $item->log();
     }
 
     public function autorun(): void

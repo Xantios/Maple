@@ -45,6 +45,24 @@ class HttpServer {
                 ], json_encode($psm->all(), JSON_THROW_ON_ERROR));
             }
 
+            if( substr($route,0,9)==="/api/log/") {
+
+                $name = explode('/',substr($route,1),3)[2];
+
+                if($name==="") {
+                    return new Response(404,[
+                        'Content-Type' => 'text/json'
+                    ],json_encode(['error' => true,'msg'=> 'Invalid name']));
+                }
+
+                return new Response(200,[
+                    'Content-Type' => 'text/json'
+                ], json_encode([
+                    'name' => $name,
+                    'log' => $psm->log($name)
+                ], JSON_THROW_ON_ERROR));
+            }
+
             return new Response(404,[
                 'Content-Type' => 'text/plain'
             ],'Unknown');

@@ -23,6 +23,9 @@ class ManagedProcess {
     public int $retries = 0;
     public int $currentRetry = 0;
 
+    private array $log = [];
+    private int $sizeLimit = 128;
+
     // Run after this task if defined
     public string $afterName = '';
 
@@ -52,6 +55,10 @@ class ManagedProcess {
         return $this->run();
     }
 
+    public function log() {
+        return $this->log;
+    }
+
     public function run() :bool
     {
         $this->status = ProcessStateManager::CREATED;
@@ -69,10 +76,12 @@ class ManagedProcess {
 
         $process->stdout->on('data',function($chunk) {
             $this->printStdMsg($chunk);
+            $this->addLogMessage($chunk,'stdout');
         });
 
         $process->stderr->on('data',function($chunk) {
             $this->printStdMsg($chunk);
+            $this->addLogMessage($chunk,'stderr');
         });
 
         $process->on('exit',function($code) {
@@ -111,6 +120,27 @@ class ManagedProcess {
         });
 
         return true;
+    }
+
+    private function addLogMessage($chunk,$channel) :void {
+        
+        if( count($this->log) >= $this->sizeLimit) {
+            print "==> Trimming log for ".$this->name.PHP_EOL;
+        }
+
+        // Trim down before adding
+        while(count($this->log) >= $this->sizeLimit) {
+            array_shift($this->log);
+        }
+
+        $lines = explode(PHP_EOL,$chunk);
+
+        foreach($lines as $line) {
+            $this->log[] = [
+                'channel' => $channel,
+                'msg' => $line
+            ];
+        }
     }
 
     private function printStdMsg($chunk): void
