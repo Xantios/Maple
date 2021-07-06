@@ -113,10 +113,61 @@
             return new Date(timestamp).toLocaleDateString(locale);
         }
     }
+
+    function openLogModal(title) {
+        document.querySelector('#modal-title').innerHTML = "Recent evens for "+title;
+        document.querySelector('#modal-content').innerHTML = "";
+
+        document.querySelector('#modal').style.display = "block";
+
+        // Add listener
+        logWatcher = setInterval(() => {
+            
+            const url = '/api/log/'+title;
+            axios.get(url)
+                .then(resp => {
+                    let lines = resp.data.log
+                        .map(line => {
+                            if(line.msg !== "") {
+                                let channel = line.channel.replace('std','');
+
+                                let prefix;
+                                if(channel=="out") {
+                                    prefix = '<span class="text-gray-400">[Out]</span>';
+                                } else {
+                                    prefix = '<span class="text-red-400">[Err]</span>';
+                                }
+
+                                return prefix+"&nbsp;<span class='text-white'>"+line.msg+"</span>";
+
+                            } else {
+                                return "";
+                            }
+                        })
+                        .filter(line => line!=="")
+                        .join('<br />');
+
+                    document.querySelector('#modal-content').innerHTML = lines;
+                })
+                .catch(e => {
+                    console.error(e);
+                })
+
+        },250);
+    }
+
+    function closeLogModal() {
+
+        document.querySelector('#modal').style.display = 'none';
+
+        // Remove Listener
+        clearInterval(logWatcher);
+    }
+
 </script>
 <body class="bg-gray-100">
 
-<div class="header w-full h-18 p-4 border-b border-gray-200 mb-6 flex bg-red-600 text-white">
+<div class="header w-full h-18 p-4 border-b border-gray-200 mb-0 lg:mb-6 flex bg-red-600 text-white">
     <div class="w-10 h-10 mr-4">
         <?xml version="1.0" encoding="UTF-8"?>
         <svg fill="white" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
@@ -183,9 +234,45 @@
         </div>
     </div>
 
-    <div class="w-3/12"></div>
+    <div class="w-0 lg:w-3/12"></div>
 
 </div>
+
+<!-- Log modal -->
+<div id="modal" class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+
+      <div onclick="closeLogModal()" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+  
+      <!-- This element is to trick the browser into centering the modal contents. -->
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+  
+      <!-- Start of modal -->
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle max-w-10/12">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              
+                <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900" id="modal-title"></h3>
+
+              <div class="mt-2">
+                <p class="text-sm text-gray-500">
+                  Recent events, size can be configed in maple-file.
+                  <pre id="modal-content" class="mt-2 bg-black pl-2 pt-2 pr-1 pb-1 text-gray-200 w-full overflow-y-auto max-h-96 rounded">
+                  </pre>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button onclick="closeLogModal()" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
