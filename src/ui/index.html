@@ -20,12 +20,20 @@
             font-weight: 400;
             line-height: 1.5;
         }
+
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 
 </head>
+
 <script>
     window.addEventListener('load', () => {
         main();
+        var logWatcher = undefined;
     })
 
     function main() {
@@ -33,23 +41,52 @@
         setInterval(() => {
             axios.get('/api/processes')
                 .then(resp => {
+
+                    // Fortmat desktop/tablet
                     let data = '';
+
+                    let icon = "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">\
+                        <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\" />\
+                    </svg>";
 
                     resp.data.forEach((item, i) => {
 
+                        let logButton = "<div id=\"hook-"+i+"\" onclick=\"openLogModal('"+item.name+"')\">"+icon+"</div>";
+
                         data += "<tr class=\"bg-white border border-gray-200\">";
-                        data += "   <td class='w-4 px-3 py-2'>" + i + "</td>";
+                        data += "   <td class='lg:w-4 px-3 py-2 hidden lg:block w-0'>" + i + "</td>";
                         data += "   <td class='w-2/5 px-4 py-2'>" + item.name + "</td>";
-                        data += "   <td class='w-3/5 px-1 py-2'><pre>" + item.command + "</pre></td>";
+                        data += "   <td class='w-0 md:w-3/12 lg:w-3/5 px-1 py-2 hidden lg:block'><pre class=\"truncate\">" + item.command + "</pre></td>";
+                        data += "   <td class='w-1/12 x-1 py-2 text-gray-400 hover:text-gray-600 text-center'>"+logButton+"</td>";
                         data += "   <td class='w-12 px-5 py-2'>" + statusPill(item.status) + "</td>";
                         data += "   <td class='w-12 px-1 py-2'>" + fuzzyTime(item.started_at) + "</td>";
-                        data += "   <td class='w-12 px-1 py-2'>"+formattedAttempt(item)+"</td>";
+                        data += "   <td class='w-6/12 px-1 py-2 hidden lg:block'>"+formattedAttempt(item)+"</td>";
                         data += "</tr>";
                     });
 
                     document.querySelector('#tablecontent').innerHTML = data;
 
-                    // console.log(resp.data);
+                    let mobile = '';
+
+                    // Format Mobile 
+                    resp.data.forEach((item,i) => {
+
+                        mobile += "<div class=\"mt-4 bg-white\" onClick=\"openLogModal('"+item.name+"');\">";
+                        mobile += '     <div class="flex justify-between">';
+                        mobile += '         <h1 class="text-lg pl-2 pt-1 truncate pr-8">'+item.name+'</h1>';
+                        mobile += '          <div class="mt-2">'+statusPill(item.status)+'</div>';
+                        mobile += '     </div>';
+                        // mobile += '<div class="pl-2 pr-2">';
+                        // mobile += "     <pre class='truncate'>"+item.command+"</pre>";
+                        // mobile += '</div>';
+                        mobile += '<div class="flex justify-between p-2">'; 
+                        mobile += ' <span>'+formattedAttempt(item)+"</span>";
+                        mobile += ' <span>'+fuzzyTime(item.started_at)+"</span>";
+                        mobile += '</div>';
+                        mobile += '</div>';
+                    })
+
+                    document.querySelector('#mobile').innerHTML = mobile;
                 })
                 .catch(e => console.error(e.message));
         },1000);
@@ -58,7 +95,7 @@
     function formattedAttempt(item) {
 
         if(item.retries===0 && item.currentRetry===0) {
-            return '';
+            return '<span class="text-sm text-gray-400"> 0 / 0 </span>';
         }
 
         let max = (item.retries===-1) ? '&infin;' : item.retries;
@@ -69,15 +106,15 @@
     function statusPill(label) {
 
         if (label === "Finished") {
-            return "<div class=\"py-2 px-4 shadow-md no-underline rounded-full bg-blue-800 text-white font-sans font-semibold text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Finished</div>";
+            return "<div class=\"py-1 px-2 md:py-2 md:px-4 shadow-md no-underline rounded-full bg-blue-800 text-white font-sans font-semibold text-xs md:text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Finished</div>";
         }
 
         if (label === "Running") {
-            return "<div class=\"py-2 px-4 shadow-md no-underline rounded-full bg-green-600 text-white font-sans font-semibold text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Running</div>";
+            return "<div class=\"py-1 px-2 md:py-2 md:px-4 shadow-md no-underline rounded-full bg-green-600 text-white font-sans font-semibold text-xs md:text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Running</div>";
         }
 
         if (label === "Crashed") {
-            return "<div class=\"py-2 px-4 shadow-md no-underline rounded-full bg-red-600 text-white font-sans font-semibold text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Crashed</div>";
+            return "<div class=\"py-1 px-2 md:py-2 md:px-4 shadow-md no-underline rounded-full bg-red-600 text-white font-sans font-semibold text-sm md:text-sm border-blue btn-primary hover:text-white hover:bg-blue-light focus:outline-none active:shadow-none mr-2\">Crashed</div>";
         }
 
         return label;
@@ -188,11 +225,21 @@
 
 <div class="flex">
 
-    <div class="w-3/12"></div>
+    <div class="w-0 lg:w-3/12"></div>
 
-    <div class="w-full flex">
+    <!-- Mobile view -->
+    <div class="w-full md:hidden">
+        <h4 class="text-xl p-2 bg-white">Processes</h4>
+        <hr />
+        
+        <div class="w-full" id="mobile">
+        </div>
+    </div>
 
-        <div class="w-full bg-white shadow-xl">
+    <!-- Tablet and desktop view -->
+    <div class="w-full flex hidden md:block">
+
+        <div class="w-full bg-white lg:shadow-xl">
 
             <div class="mb-4 px-6 py-6">
                 <h4 class="text-xl">Processes</h4>
@@ -202,15 +249,20 @@
 
                 <thead class="justify-between">
                 <tr class="bg-gray-100">
-                    <th class="px-2 py-2">
+                    <th class="px-2 py-2 hidden lg:block">
                         <span class="text-gray-600">#</span>
                     </th>
                     <th class="px-2 py-2">
                         <span class="text-gray-600">Name</span>
                     </th>
-                    <th class="px-8 py-2">
+                    <th class="px-8 py-2 hidden lg:block">
                         <span class="text-gray-600">Command</span>
                     </th>
+
+                    <th class="px-4 py-2">
+                        <span class="text-gray-600">Log</span>
+                    </th>
+
                     <th class="px-4 py-2">
                         <span class="text-gray-600">Status</span>
                     </th>
@@ -219,7 +271,7 @@
                         <span class="text-gray-600">Started</span>
                     </th>
 
-                    <th class="px-4 py-2">
+                    <th class="px-4 py-2 hidden lg:block">
                         <span class="text-gray-600">Attempt</span>
                     </th>
 
