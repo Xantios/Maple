@@ -10,6 +10,7 @@ class ManagedProcess {
 
     private OutputInterface $output;
     private LoopInterface $loop;
+    private Process $process;
 
     private string $prefix;
 
@@ -44,6 +45,8 @@ class ManagedProcess {
 
         $this->command = $config['cmd'];
         $this->afterName = $config['after'] ?? '';
+
+        $this->process = new Process($this->command);
     }
 
     public function autostart() :bool {
@@ -55,16 +58,14 @@ class ManagedProcess {
         return $this->run();
     }
 
-    public function log() {
+    public function log(): array
+    {
         return $this->log;
     }
 
     public function run() :bool
     {
-        $this->status = ProcessStateManager::CREATED;
-
-        $process = new Process($this->command);
-        $process->start($this->loop);
+        $this->process->start($this->loop);
 
         // First attempt should be obvious
         if($this->currentRetry > 0) {
@@ -74,17 +75,7 @@ class ManagedProcess {
         $this->status = ProcessStateManager::RUNNING;
         $this->started_at = (string)((new \DateTime())->getTimestamp()*1000); // JS uses ms instead of secs
 
-        $process->stdout->on('data',function($chunk) {
-            $this->printStdMsg($chunk);
-            $this->addLogMessage($chunk,'stdout');
-        });
-
-        $process->stderr->on('data',function($chunk) {
-            $this->printStdMsg($chunk);
-            $this->addLogMessage($chunk,'stderr');
-        });
-
-        $process->on('exit',function($code) {
+        $this->process->on('exit',function($code) {
 
             if($code !== 0) {
                 $this->status = ProcessStateManager::CRASHED;
@@ -92,7 +83,6 @@ class ManagedProcess {
                 $this->status = ProcessStateManager::FINISHED;
             }
 
-            // Find after hook when this process exits, because the runtime CAN change while running
             if($this->afterName) {
 
                 $psm = ProcessStateManager::getInstance();
@@ -119,7 +109,40 @@ class ManagedProcess {
             }
         });
 
+        $this->process->stdout->on('data',function($chunk) {
+            $this->printStdMsg($chunk);
+            $this->addLogMessage($chunk,'stdout');
+        });
+
+        $this->process->stdout->on('error',function(\Exception $e) {
+            print "Exception in execution: ".$e->getMessage();
+        });
+
+        $this->process->stderr->on('data',function($chunk) {
+            $this->printStdMsg($chunk);
+            $this->addLogMessage($chunk,'stderr');
+        });
+
         return true;
+    }
+
+    public function stop() :void {
+        // Kill it with fire
+        if(isset($this->process)) {
+            $this->process->terminate(SIGTERM);
+        }
+    }
+
+    public function kill() :void {
+        // Nuke it from orbit
+        if(isset($this->process)) {
+
+            foreach ($this->process->pipes as $pipe) {
+                $pipe->close();
+            }
+
+            $this->process->terminate(SIGKILL);
+        }
     }
 
     private function addLogMessage($chunk,$channel) :void {
