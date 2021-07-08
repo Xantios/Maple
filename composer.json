@@ -14,16 +14,22 @@
         "react/child-process": "^0.6.1",
         "symfony/console": "^5.2",
         "react/http": "^1.2.0",
-        "illuminate/collections": "^8.22"
+        "illuminate/collections": "^8.22",
+        "ext-pcntl": "*"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
         "symfony/var-dumper": "^5.2",
-        "vimeo/psalm": "^4.4"
+        "vimeo/psalm": "^4.4",
+        "phpunit/phpunit": "^9",
+        "sempro/phpunit-pretty-print": "^1.4"
     },
     "autoload": {
         "psr-4": {
             "Xantios\\Maple\\": "src/"
         }
+    },
+    "scripts": {
+        "test": "phpunit -c phpunit.xml"
     }
 }

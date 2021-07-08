@@ -1,0 +1,20 @@
+<phpunit
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    bootstrap="vendor/autoload.php"
+    printerClass="Sempro\PHPUnitPrettyPrinter\PrettyPrinterForPhpUnit9"
+>
+
+    <php>
+        <env name="PHPUNIT_PRETTY_PRINT_PROGRESS" value="true" />
+    </php>
+
+    <testsuites>
+        <testsuite name="Maple Testing">
+            <directory suffix="Test.php">./tests</directory>
+            <exclude>./tests/util/</exclude>
+        </testsuite>
+    </testsuites>
+</phpunit>
