@@ -20,13 +20,13 @@ class HttpServer {
 
     public function __construct(array $config,LoopInterface $loop,OutputInterface $output) {
 
-        $this->port = (isset($config['port'])) ? $config['port'] : '8100';
-        $this->host = (isset($config['host'])) ? $config['host'] : '127.0.0.1';
+        $this->port = $config['port'] ?? '8100';
+        $this->host = $config['host'] ?? '127.0.0.1';
 
         $this->loop = $loop;
         $this->output = $output;
 
-        $psm = ProcessStateManager::getInstance();
+        $psm = ProcessStateManager::getInstance($output,$loop);
 
         $this->server = new Server($this->loop,function(ServerRequestInterface $request) use($psm) {
 
@@ -45,14 +45,14 @@ class HttpServer {
                 ], json_encode($psm->all(), JSON_THROW_ON_ERROR));
             }
 
-            if( substr($route,0,9)==="/api/log/") {
+            if(str_starts_with($route, "/api/log/")) {
 
                 $name = explode('/',substr($route,1),3)[2];
 
                 if($name==="") {
                     return new Response(404,[
                         'Content-Type' => 'text/json'
-                    ],json_encode(['error' => true,'msg'=> 'Invalid name']));
+                    ], json_encode(['error' => true, 'msg' => 'Invalid name'], JSON_THROW_ON_ERROR));
                 }
 
                 return new Response(200,[
@@ -76,5 +76,4 @@ class HttpServer {
         $this->output->writeln('<info>Listening on '.$this->host.":".$this->port.'</info>');
         $this->server->listen($socket);
     }
-
 }
