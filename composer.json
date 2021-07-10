@@ -31,5 +31,10 @@
     },
     "scripts": {
         "test": "phpunit -c phpunit.xml"
+    },
+    "config": {
+        "platform": {
+            "php": "8.0"
+        }
     }
 }
