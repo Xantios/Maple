@@ -18,7 +18,7 @@ class HttpServer {
     private Server $server;
     private OutputInterface $output;
 
-    public function __construct(array $config,LoopInterface $loop,OutputInterface $output) {
+    public function __construct(array $config,LoopInterface $loop,OutputInterface $output,ProcessStateManager $psm) {
 
         $this->port = $config['port'] ?? '8100';
         $this->host = $config['host'] ?? '127.0.0.1';
@@ -26,17 +26,33 @@ class HttpServer {
         $this->loop = $loop;
         $this->output = $output;
 
-        $psm = ProcessStateManager::getInstance($output,$loop);
-
         $this->server = new Server($this->loop,function(ServerRequestInterface $request) use($psm) {
 
             $route = $request->getUri()->getPath();
 
             // Serve out dashboard
-            if($route === "/") {
+            if($route === "/" || $route==="/app.css" || $route==="/app.js") {
+
+                $route = ($route==="/") ? "/index.html" : $route;
+
+                switch ($route) {
+                    case '/index.html':
+                        $mime = 'text/html';
+                        break;
+                    case '/app.js':
+                        $mime = 'text/javascript';
+                        break;
+                    case '/app.css':
+                        $mime = 'text/css';
+                        break;
+                    default:
+                        $mime = "text/json";
+                        break;
+                }
+
                 return new Response(200,[
-                    'Content-Type' => 'text/html'
-                ],file_get_contents(__DIR__.'/ui/index.html'));
+                    'Content-Type' => $mime
+                ],file_get_contents(__DIR__.'/ui'.$route));
             }
 
             if($route === "/api/processes") {
