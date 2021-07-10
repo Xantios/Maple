@@ -1,4 +1,11 @@
 <p align="center">
+    <a href="https://travis-ci.com/Xantios/Maple"><img src="https://travis-ci.com/xantios/Maple.svg?branch=master" alt="Build Status"></a>
+    <a href="https://packagist.org/packages/xantios/Maple"><img src="https://img.shields.io/packagist/dt/xantios/Maple" alt="Total Downloads"></a>
+    <a href="https://packagist.org/packages/xantios/Maple"><img src="https://img.shields.io/packagist/v/xantios/Maple" alt="Latest Stable Version"></a>
+    <a href="https://packagist.org/packages/xantios/Maple"><img src="https://img.shields.io/packagist/l/xantios/Maple" alt="License"></a>
+</p>
+
+<p align="center">
     <img src="https://raw.githubusercontent.com/Xantios/Maple/master/src/ui/logo.svg" alt="Maple Logo">
 </p>
 
