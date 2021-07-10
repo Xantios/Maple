@@ -1,3 +1,4 @@
 vendor/
 maple-config.php
 .idea
+.phpunit.result.cache

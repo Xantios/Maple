@@ -19,7 +19,7 @@ class ProcessStateManager {
     public const CRASHED = 'Crashed';
     public const FINISHED = 'Finished';
 
-    private function __construct(OutputInterface $output,LoopInterface $loop)
+    public function __construct(OutputInterface $output,LoopInterface $loop)
     {
         $this->items = new Collection();
 
@@ -27,41 +27,35 @@ class ProcessStateManager {
         $this->loop = $loop;
     }
 
-    /**
-     * Singleton pattern in PHP, returns the same instance over and over again
-     *
-     * @param OutputInterface|null $output
-     * @param LoopInterface|null $loop
-     *
-     * @return ProcessStateManager
-     */
-    public static function getInstance(?OutputInterface $output = null,?LoopInterface $loop = null): ProcessStateManager
-    {
-        if(!self::$instance) {
-            self::$instance = new ProcessStateManager($output,$loop);
+    public function add(array $item,ProcessStateManager $processStateManagerInstance) :ManagedProcess {
+
+        // Check for a name key
+        if(!isset($item['name'])) {
+            throw new \RuntimeException('Missing name');
         }
 
-        return self::$instance;
-    }
-
-    public function add(array $item) :bool {
+        // Check for command
+        if(!isset($item['cmd'])) {
+            throw new \RuntimeException('Missing command');
+        }
 
         // Check for duplicates
         if($this->items->where('name',$item['name'])->count() > 0) {
-            throw new \RuntimeException('Duplicate entry for '.$item['name'].' Please check your config file');
+            throw new \LogicException('Duplicate entry for '.$item['name'].' Please check your config file');
         }
 
-        $this->items->push(new ManagedProcess($item,$this->output,$this->loop));
+        $process = new ManagedProcess($item,$this->output,$this->loop,$processStateManagerInstance);
+        $this->items->push($process);
         $this->output->writeln('<info>Added task '.$item['name'].'</info>');
 
-        return true;
+        return $process;
     }
 
     public function all() :array {
         return $this->items->all();
     }
 
-    public function get(string $name) :ManagedProcess {
+    public function get(string $name) :ManagedProcess|null {
         return $this->items->where('name',$name)->first();
     }
 
@@ -78,11 +72,12 @@ class ProcessStateManager {
 
             $run = $process->autostart();
 
-            if($run) {
-                $this->output->writeLn('<info>[OK]</info>  Autostarting '.$process->name);
-            } else {
+            if(!$run) {
                 $this->output->writeln('<error>[ERR]</error>Autostarting '.$process->name);
+                return;
             }
+
+            $this->output->writeLn('<info>[OK]</info>  Autostarting '.$process->name);
         });
     }
 

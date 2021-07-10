@@ -33,12 +33,15 @@ class RunCommand extends Command {
         // Create React loop
         $loop = Factory::create();
 
+        // Create ProcessStateManager
+        $psm = new ProcessStateManager($output,$loop);
+
         // Setup ProcessRunner
-        $proc = new ProcessRunner($config,$loop,$output);
+        $proc = new ProcessRunner($config,$loop,$output,$psm);
         $proc->run();
 
         // Setup Http server
-        $http = new HttpServer($config,$loop,$output);
+        $http = new HttpServer($config,$loop,$output,$psm);
         $http->run();
 
         // Run async loop manager thingy

@@ -11,12 +11,14 @@ class ManagedProcess {
     private OutputInterface $output;
     private LoopInterface $loop;
     private Process $process;
+    private ProcessStateManager $psm;
 
     private string $prefix;
 
     public string $name;
     public string $status = ProcessStateManager::CREATED;
     public string $started_at;
+    public string $updated_at;
     public string $command = '';
 
     public bool $autostart = false;
@@ -30,21 +32,23 @@ class ManagedProcess {
     // Run after this task if defined
     public string $afterName = '';
 
-    public function __construct(array $config,OutputInterface $output,LoopInterface $loop) {
+    public function __construct(array $config,OutputInterface $output,LoopInterface $loop,ProcessStateManager $psm) {
 
-        $this->loop = $loop;
-        $this->output = $output;
+        $this->loop         = $loop;
+        $this->output       = $output;
+        $this->psm          = $psm;
 
-        $this->started_at = '';
+        $this->started_at   = '';
+        $this->updated_at   = '';
 
-        $this->autostart = $config['autostart'] ?? false;
-        $this->retries = $config['retries'] ?? 0;
+        $this->autostart    = $config['autostart'] ?? false;
+        $this->retries      = $config['retries'] ?? 0;
+
+        $this->command      = $config['cmd'];
+        $this->afterName    = $config['after'] ?? '';
 
         $this->name = $this->safeName($config['name']);
         $this->prefix = str_pad(substr($this->name,0,25),26,' ');
-
-        $this->command = $config['cmd'];
-        $this->afterName = $config['after'] ?? '';
 
         $this->process = new Process($this->command);
     }
@@ -58,18 +62,29 @@ class ManagedProcess {
         return $this->run();
     }
 
-    public function log(): array
-    {
+    public function log(): array {
         return $this->log;
     }
 
     public function run() :bool
     {
-        $this->process->start($this->loop);
+        try {
+
+            if($this->process->isRunning()) {
+                $this->logMessage('Process is already running');
+                return false;
+            }
+
+            $this->process->start($this->loop);
+            $this->logMessage('Started');
+
+        } catch (\Exception $e) {
+            $this->output->writeln("<warn>We're having some trouble running {$this->name} ($this->command) message from OS: " . $e->getMessage()."</warn>");
+        }
 
         // First attempt should be obvious
         if($this->currentRetry > 0) {
-            $this->output->writeln($this->prefix . ' :: Running (Retry ' . $this->currentRetry . ')');
+            $this->logMessage('Running (Retry ' . $this->currentRetry . ')');
         }
 
         $this->status = ProcessStateManager::RUNNING;
@@ -83,57 +98,50 @@ class ManagedProcess {
                 $this->status = ProcessStateManager::FINISHED;
             }
 
+            // Clean up this process
+            $this->kill();
+            $this->process = new Process($this->command);
+
             if($this->afterName) {
 
-                $psm = ProcessStateManager::getInstance();
-                $afterInstance = $psm->get($this->safeName($this->afterName));
+                $afterInstance = $this->psm->get($this->safeName($this->afterName));
 
-                $this->output->writeln($this->prefix.' :: Exited Next => '.$afterInstance->name);
+                $this->logMessage('Exited Next => '.$afterInstance->name);
 
                 $afterInstance->run();
 
                 return;
             }
 
-            $this->output->writeln($this->prefix.' :: Exited with status '.$code);
+            $this->logMessage('Exited with status '.$code);
 
             if($this->retries === -1) {
                 $this->currentRetry++;
-                $this->run();
+                $this->loop->addTimer(1,function() {
+                    $this->run();
+                });
                 return;
             }
 
             if($this->retries > 0 && $this->retries > $this->currentRetry) {
                 $this->currentRetry++;
-                $this->run();
+                $this->loop->addTimer(2,function() {
+                    $this->run();
+                });
             }
         });
 
-        $this->process->stdout->on('data',function($chunk) {
-            $this->printStdMsg($chunk);
-            $this->addLogMessage($chunk,'stdout');
-        });
+        $this->process->stdout->on('data',fn($chunk) => $this->logMessage($chunk,'stdout'));
+        $this->process->stderr->on('data',fn($chunk) => $this->logMessage($chunk,'stderr'));
 
         $this->process->stdout->on('error',function(\Exception $e) {
             print "Exception in execution: ".$e->getMessage();
         });
 
-        $this->process->stderr->on('data',function($chunk) {
-            $this->printStdMsg($chunk);
-            $this->addLogMessage($chunk,'stderr');
-        });
-
         return true;
     }
 
-    public function stop() :void {
-        // Kill it with fire
-        if(isset($this->process)) {
-            $this->process->terminate(SIGTERM);
-        }
-    }
-
-    public function kill() :void {
+    public function stop($signal = SIGTERM) :void {
         // Nuke it from orbit
         if(isset($this->process)) {
 
@@ -141,19 +149,27 @@ class ManagedProcess {
                 $pipe->close();
             }
 
-            $this->process->terminate(SIGKILL);
+            $this->process->terminate($signal);
         }
     }
 
-    private function addLogMessage($chunk,$channel) :void {
-        
-        if( count($this->log) >= $this->sizeLimit) {
-            print "==> Trimming log for ".$this->name.PHP_EOL;
-        }
+    public function kill() :void {
+        $this->stop(SIGKILL);
+    }
+
+    private function logMessage($chunk,$channel = 'system') :void {
+
+        $channels = [
+            'stdout' => '<info>stdout</info>',
+            'stderr' => '<err>stderr</info>',
+            'system' => '<info>system</info>'
+        ];
 
         // Trim down before adding
-        while(count($this->log) >= $this->sizeLimit) {
-            array_shift($this->log);
+        if( count($this->log) >= $this->sizeLimit) {
+            while (count($this->log) >= $this->sizeLimit) {
+                array_shift($this->log);
+            }
         }
 
         $lines = explode(PHP_EOL,$chunk);
@@ -163,15 +179,8 @@ class ManagedProcess {
                 'channel' => $channel,
                 'msg' => $line
             ];
-        }
-    }
 
-    private function printStdMsg($chunk): void
-    {
-        $lines = explode(PHP_EOL,$chunk);
-
-        foreach($lines as $line) {
-            $this->output->writeln($this->prefix . ' :: ' . $line);
+            $this->output->writeln($this->prefix .$channels[$channel].' :: ' . $line);
         }
     }
 
